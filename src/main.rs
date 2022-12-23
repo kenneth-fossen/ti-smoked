@@ -3,10 +3,7 @@ use serde_json;
 use ti_smoked::core::{SmokeTest, TestTarget};
 use ti_smoked::open;
 
-use ti_smoked::smoke::{
-    alive::AliveTest,
-    dummy::DummyTest
-};
+use ti_smoked::smoke::{alive::AliveTest, dummy::DummyTest};
 
 fn main() {
     println!("Hello, world!\n");
@@ -24,7 +21,9 @@ fn main() {
         config: test_target.clone(),
         webclient: http_client,
     }));
-    commands.push(Box::new(DummyTest { name: format!("Dummy Test") }));
+    commands.push(Box::new(DummyTest {
+        name: format!("Dummy Test"),
+    }));
 
     println!("Test Target: {}\n", &test_target.name);
 
@@ -40,7 +39,6 @@ fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     println!("Total tests:\t{}", commands.len());
     println!("\tPassed:\t{}", commands.len());
 }
-
 
 pub struct ClClient {
     appkey: String,

@@ -1,9 +1,9 @@
-use crate::core::{ResultBuilder, SmokeTest, TestResultBuilder};
 use crate::core::TestResult;
+use crate::core::{ResultBuilder, SmokeTest, TestResultBuilder};
 use std::time::Instant;
 
-pub struct DummyTest { 
-    pub name: String 
+pub struct DummyTest {
+    pub name: String,
 }
 
 impl SmokeTest for DummyTest {
