@@ -1,6 +1,6 @@
-use crate::core::SmokeTest;
+use crate::core::{ResultBuilder, SmokeTest, TestResultBuilder};
 use crate::core::TestResult;
-use std::time::Duration;
+use std::time::Instant;
 
 pub struct DummyTest { 
     pub name: String 
@@ -8,13 +8,11 @@ pub struct DummyTest {
 
 impl SmokeTest for DummyTest {
     fn run(&self) -> TestResult {
-        let time = Duration::from_millis(1337);
+        let test_result = TestResultBuilder::default()
+            .set_name(self.name.clone())
+            .set_details(format!("Good"))
+            .set_duration(Instant::now());
 
-        TestResult {
-            name: self.name.clone(),
-            smoke: false,
-            details: String::from("Good"),
-            duration: time,
-        }
+        test_result.success()
     }
 }
