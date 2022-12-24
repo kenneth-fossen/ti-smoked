@@ -40,7 +40,7 @@ async fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
 
     commands
         .iter()
-        .for_each(async |cmd| { println!("{}", cmd.run().await)});
+        .for_each(async |cmd| println!("{}", cmd.run().await));
 
     println!("---\n");
     println!("Total tests:\t{}", commands.len());
