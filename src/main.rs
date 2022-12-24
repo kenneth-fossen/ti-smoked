@@ -2,6 +2,7 @@
 #![feature(async_iterator)]
 #![allow(dead_code, unused_variables, unreachable_code)]
 
+use std::async_iter::AsyncIterator;
 use serde_json;
 use ti_smoked::core::{SmokeTest, TestTarget};
 use ti_smoked::open;
@@ -17,7 +18,7 @@ async fn main() {
         serde_json::from_str(file_content.as_str()).expect("Failed to parse JSON");
     println!();
 
-    let http_client = reqwest::blocking::Client::new();
+    let http_client = reqwest::Client::new();
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
     commands.push(Box::new(AliveTest {

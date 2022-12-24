@@ -7,7 +7,7 @@ use async_trait::async_trait;
 pub struct AliveTest {
     pub name: String,
     pub config: TestTarget,
-    pub webclient: reqwest::blocking::Client,
+    pub webclient: reqwest::Client,
 }
 
 #[async_trait]
@@ -26,6 +26,7 @@ impl SmokeTest for AliveTest {
             .webclient
             .get(format!("{}/alive", baseurl))
             .send()
+            .await
             .expect("Failed to get alive signal");
 
         let test_result = if res.status().is_success() {
