@@ -13,12 +13,14 @@ pub struct TestResult {
 }
 
 pub trait ResultBuilder {
-    fn set_details(self, details: String) -> TestResultBuilder;
-    fn set_name(self, name: String) -> TestResultBuilder;
-    fn set_duration(self, duration: Instant) -> TestResultBuilder;
-    fn failed(self) -> TestResult;
-    fn success(self) -> TestResult;
-    fn build(self, smoke: bool) -> TestResult;
+    type Builder;
+    type Output;
+    fn set_details(self, details: String) -> Self::Builder;
+    fn set_name(self, name: String) -> Self::Builder;
+    fn set_duration(self, duration: Instant) -> Self::Builder;
+    fn failed(self) -> Self::Output;
+    fn success(self) -> Self::Output;
+    fn build(self, smoke: bool) -> Self::Output;
 }
 
 #[derive(Default)]
@@ -29,24 +31,25 @@ pub struct TestResultBuilder {
 }
 
 impl ResultBuilder for TestResultBuilder {
-    //type OutputType = TestResult;
+    type Builder = TestResultBuilder;
+    type Output = TestResult;
 
-    fn set_details(mut self, details: String) -> TestResultBuilder {
+    fn set_details(mut self, details: String) -> Self::Builder {
         self.details = Some(details);
         self
     }
 
-    fn set_name(mut self, name: String) -> TestResultBuilder {
+    fn set_name(mut self, name: String) -> Self::Builder {
         self.name = Some(name);
         self
     }
 
-    fn set_duration(mut self, duration: Instant) -> TestResultBuilder {
+    fn set_duration(mut self, duration: Instant) -> Self::Builder {
         self.duration = Some(duration);
         self
     }
 
-    fn failed(self) -> TestResult {
+    fn failed(self) -> Self::Output {
         TestResult {
             details: self.details.unwrap_or(format!("")),
             smoke: true,
@@ -55,7 +58,7 @@ impl ResultBuilder for TestResultBuilder {
         }
     }
 
-    fn success(self) -> TestResult {
+    fn success(self) -> Self::Output {
         TestResult {
             details: self.details.unwrap_or(format!("")),
             smoke: false,
@@ -64,7 +67,7 @@ impl ResultBuilder for TestResultBuilder {
         }
     }
 
-    fn build(self, smoke: bool) -> TestResult {
+    fn build(self, smoke: bool) -> Self::Output {
         TestResult {
             details: self.details.unwrap_or(format!("")),
             smoke,
