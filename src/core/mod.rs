@@ -1,8 +1,10 @@
 use serde::Deserialize;
 use std::{fmt::Display, time::Duration, time::Instant};
+use async_trait::async_trait;
 
+#[async_trait]
 pub trait SmokeTest {
-    fn run(&self) -> TestResult;
+    async fn run(&self) -> TestResult;
 }
 
 pub struct TestResult {

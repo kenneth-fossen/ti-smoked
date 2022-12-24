@@ -1,11 +1,15 @@
+#![feature(async_closure)]
+#![feature(async_iterator)]
 #![allow(dead_code, unused_variables, unreachable_code)]
+
 use serde_json;
 use ti_smoked::core::{SmokeTest, TestTarget};
 use ti_smoked::open;
 
 use ti_smoked::smoke::{alive::AliveTest, dummy::DummyTest};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     println!("Hello, world!\n");
 
     let file_content = open("dev.json").expect("Failed to open the file");
@@ -27,13 +31,13 @@ fn main() {
 
     println!("Test Target: {}\n", &test_target.name);
 
-    run(commands, test_target);
+    run(commands, test_target).await;
 }
 
-fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
+async fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     println!("| Detector\t | Failure\t | Duration | Details \t |");
     println!("---");
-    commands.iter().for_each(|cmd| println!("{}", cmd.run()));
+    commands.iter().for_each(async |cmd| println!("{}", cmd.run().await));
     println!("---");
 
     println!("Total tests:\t{}", commands.len());
