@@ -1,8 +1,7 @@
 #![feature(async_closure)]
-#![feature(async_iterator)]
+//#![feature(async_iterator)]
 #![allow(dead_code, unused_variables, unreachable_code)]
 
-use std::async_iter::AsyncIterator;
 use serde_json;
 use ti_smoked::core::{SmokeTest, TestTarget};
 use ti_smoked::open;
@@ -38,9 +37,12 @@ async fn main() {
 async fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     println!("| Detector\t | Failure\t | Duration | Details \t |");
     println!("---");
-    commands.iter().for_each(async |cmd| println!("{}", cmd.run().await));
-    println!("---");
 
+    commands
+        .iter()
+        .for_each(async |cmd| { println!("{}", cmd.run().await)});
+
+    println!("---\n");
     println!("Total tests:\t{}", commands.len());
     println!("\tPassed:\t{}", commands.len());
 }
