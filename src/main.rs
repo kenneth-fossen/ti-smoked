@@ -34,13 +34,17 @@ async fn main() {
     run(commands, test_target).await;
 }
 
-async fn run(commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
+async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
+    commands.reverse();
     println!("| Detector\t | Failure\t | Duration | Details \t |");
     println!("---");
 
-    commands
-        .iter()
-        .for_each(async |cmd| println!("{}", cmd.run().await));
+    while let Some(cmd) = commands.pop() {
+        println!("{}", cmd.run().await)
+    }
+    //commands
+    //    .iter()
+    //    .for_each(async |cmd| println!("{}", cmd.run().await));
 
     println!("---\n");
     println!("Total tests:\t{}", commands.len());
