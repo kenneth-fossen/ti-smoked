@@ -2,7 +2,6 @@
 //#![feature(async_iterator)]
 #![allow(dead_code, unused_variables, unreachable_code)]
 
-use serde_json;
 use ti_smoked::core::{SmokeTest, TestTarget};
 use ti_smoked::open;
 
@@ -21,12 +20,12 @@ async fn main() {
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
     commands.push(Box::new(AliveTest {
-        name: format!("Alive Test"),
+        name: "Alive Test".to_string(),
         config: test_target.clone(),
         webclient: http_client,
     }));
     commands.push(Box::new(DummyTest {
-        name: format!("Dummy Test"),
+        name:"Dummy Test".to_string(),
     }));
 
     println!("Test Target: {}\n", &test_target.name);
@@ -37,7 +36,7 @@ async fn main() {
 async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     commands.reverse();
     println!("| Detector\t | Failure\t | Duration | Details \t |");
-    println!("---");
+    println!("--------------------------------------------------");
 
     while let Some(cmd) = commands.pop() {
         println!("{}", cmd.run().await)
@@ -46,26 +45,7 @@ async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     //    .iter()
     //    .for_each(async |cmd| println!("{}", cmd.run().await));
 
-    println!("---\n");
+    println!("--------------------------------------------------\n");
     println!("Total tests:\t{}", commands.len());
     println!("\tPassed:\t{}", commands.len());
-}
-
-pub struct ClClient {
-    appkey: String,
-    baseurl: String,
-    tokenprovider: String,
-}
-
-impl ClClient {
-    fn build(&self, test_target: TestTarget) -> ClClient {
-        let appkey = test_target.get_config_value("CommonLibraryAppId");
-        let baseurl = test_target.get_config_value("CommonLibraryApiBaseAddress");
-        let tokenprovider = test_target.get_config_value("TokenProviderConnectionString");
-        ClClient {
-            appkey,
-            baseurl,
-            tokenprovider,
-        }
-    }
 }

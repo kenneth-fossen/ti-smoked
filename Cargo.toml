@@ -8,10 +8,12 @@ edition = "2021"
 [dependencies]
 async-trait = "0.1.60"
 azure_identity = "0.9.0"
+chrono = "0.4.23"
 reqwest = { version = "0.11.13", features = ["blocking"] }
 serde = { version = "1.0.151",  features = ["derive"] }
 serde_json = "1.0.91"
 tokio = { version="1.23.0", features = ["full"] }
+uuid = { version = "1.2.2", features = ["v4"]}
 
 [profile.dev]
 opt-level = 3

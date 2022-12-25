@@ -1,20 +1,21 @@
-use crate::core::TestResult;
-use crate::core::{ResultBuilder, SmokeTest, TestResultBuilder};
 use std::time::Instant;
+use crate::core::{ResultBuilder, SmokeTest, TestResult, TestResultBuilder, TestTarget};
+use crate::ClClient;
 use async_trait::async_trait;
 
-pub struct DummyTest {
+struct LibrariesTest {
     pub name: String,
+    pub config: TestTarget,
+    pub webclient: ClClient,
 }
 
 #[async_trait]
-impl SmokeTest for DummyTest {
+impl SmokeTest for LibrariesTest {
     async fn run(&self) -> TestResult {
         let test_result = TestResultBuilder::default()
             .set_name(self.name.clone())
-            .set_details("Good".to_string())
             .set_duration(Instant::now());
 
-        test_result.success()
+        test_result.failed()
     }
 }

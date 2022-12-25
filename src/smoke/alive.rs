@@ -24,7 +24,7 @@ impl SmokeTest for AliveTest {
 
         let res = self
             .webclient
-            .get(format!("{}/alive", baseurl))
+            .get(format!("{baseurl}/alive"))
             .send()
             .await
             .expect("Failed to get alive signal");
@@ -35,7 +35,7 @@ impl SmokeTest for AliveTest {
             test_result
                 .set_details(format!(
                     "HTTP Request was unsuccessful: {}",
-                    res.status().to_string()
+                    res.status()
                 ))
                 .failed()
         };

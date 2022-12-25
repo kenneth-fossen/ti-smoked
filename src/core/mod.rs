@@ -53,7 +53,7 @@ impl ResultBuilder for TestResultBuilder {
 
     fn failed(self) -> Self::Output {
         TestResult {
-            details: self.details.unwrap_or(format!("")),
+            details: self.details.unwrap_or("".to_string()),
             smoke: true,
             duration: self.duration.expect("Please set duration").elapsed(),
             name: self.name.unwrap(),
@@ -62,7 +62,7 @@ impl ResultBuilder for TestResultBuilder {
 
     fn success(self) -> Self::Output {
         TestResult {
-            details: self.details.unwrap_or(format!("")),
+            details: self.details.unwrap_or("".to_string()),
             smoke: false,
             duration: self.duration.expect("Please set duration").elapsed(),
             name: self.name.unwrap(),
@@ -71,7 +71,7 @@ impl ResultBuilder for TestResultBuilder {
 
     fn build(self, smoke: bool) -> Self::Output {
         TestResult {
-            details: self.details.unwrap_or(format!("")),
+            details: self.details.unwrap_or("".to_string()),
             smoke,
             duration: self.duration.expect("Please set duration").elapsed(),
             name: self.name.unwrap(),
@@ -83,13 +83,13 @@ impl Display for TestResult {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let result = if !self.smoke { "" } else { "X" };
         let details = if self.details.is_empty() {
-            format!("\t")
+            "\t".to_string()
         } else {
             self.details.clone()
         };
         write!(
             formatter,
-            "| {}\t | {}\t\t | {} ms \t| {} \t\t |",
+            "| {} | {}\t\t\t | {} ms \t| {} \t\t |",
             self.name,
             result,
             self.duration.as_millis(),
