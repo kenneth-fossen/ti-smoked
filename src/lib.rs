@@ -86,4 +86,18 @@ struct CodeSet {
     date_updated: DateTime<Utc>,
 }
 
-struct Code;
+struct Code {
+    project: String,
+    // Display name Code Set, ignore null
+    code_set: CodeSet,
+    code_set_name: String,
+    attributes: Vec<CodeAttribute>,
+    identity: String,
+    iri: String,
+    attachment: Attachment,
+    attachment_key: Uuid,
+}
+
+struct CodeAttribute {
+    
+}

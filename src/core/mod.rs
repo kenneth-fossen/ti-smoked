@@ -1,3 +1,5 @@
+mod entities;
+
 use serde::Deserialize;
 use std::{fmt::Display, time::Duration, time::Instant};
 use async_trait::async_trait;
