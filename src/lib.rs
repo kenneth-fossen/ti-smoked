@@ -1,6 +1,7 @@
 use std::fs::File;
 use std::io::Read;
 use chrono::{DateTime, Utc};
+use serde::{Deserialize};
 use uuid::Uuid;
 use crate::core::TestTarget;
 
@@ -45,6 +46,7 @@ impl ClClient {
     }
 }
 
+#[derive(Deserialize)]
 struct Library {
     definition: String,
     alias: String,
@@ -70,9 +72,13 @@ struct Library {
     date_updated: DateTime<Utc>,
 }
 
+#[derive(Deserialize)]
 struct Attachment;
+
+#[derive(Deserialize)]
 struct AttributeDefinition;
 
+#[derive(Deserialize)]
 struct CodeSet {
     codes: Vec<Code>,
     library: Library,
@@ -86,6 +92,7 @@ struct CodeSet {
     date_updated: DateTime<Utc>,
 }
 
+#[derive(Deserialize)]
 struct Code {
     project: String,
     // Display name Code Set, ignore null
@@ -98,6 +105,7 @@ struct Code {
     attachment_key: Uuid,
 }
 
+#[derive(Deserialize)]
 struct CodeAttribute {
-    
+
 }

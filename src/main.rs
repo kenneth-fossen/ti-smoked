@@ -1,5 +1,9 @@
 #![feature(async_closure)]
 //#![feature(async_iterator)]
+
+//#![feature(async_fn_in_trait)]
+//#![allow(incomplete_features)]
+// unable to use Async fn in trait due to the use of Box<dyn Trait>
 #![allow(dead_code, unused_variables, unreachable_code)]
 
 use ti_smoked::core::{SmokeTest, TestTarget};
