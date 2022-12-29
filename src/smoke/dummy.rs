@@ -1,5 +1,5 @@
-use crate::core::TestResult;
-use crate::core::{ResultBuilder, SmokeTest, TestResultBuilder};
+use crate::commonlib::TestResult;
+use crate::commonlib::{ResultBuilder, SmokeTest, TestResultBuilder};
 use std::time::Instant;
 use async_trait::async_trait;
 

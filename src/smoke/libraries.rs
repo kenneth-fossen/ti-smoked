@@ -1,12 +1,12 @@
 use std::time::Instant;
-use crate::core::{ResultBuilder, SmokeTest, TestResult, TestResultBuilder, TestTarget};
-use crate::ClClient;
+use crate::commonlib::{ResultBuilder, SmokeTest, TestResult, TestResultBuilder, TestTarget};
+use crate::Client;
 use async_trait::async_trait;
 
 struct LibrariesTest {
     pub name: String,
     pub config: TestTarget,
-    pub webclient: ClClient,
+    pub webclient: Client,
 }
 
 #[async_trait]

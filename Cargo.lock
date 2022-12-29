@@ -1379,6 +1379,7 @@ name = "ti-smoked"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "azure_core",
  "azure_identity",
  "chrono",
  "reqwest",

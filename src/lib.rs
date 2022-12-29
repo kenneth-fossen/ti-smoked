@@ -1,11 +1,17 @@
+extern crate core;
+
 use std::fs::File;
 use std::io::Read;
+use std::sync::Arc;
+use async_trait::async_trait;
+use azure_identity::ClientSecretCredential;
+use azure_core::auth::TokenCredential;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize};
 use uuid::Uuid;
-use crate::core::TestTarget;
+use crate::commonlib::TestTarget;
 
-pub mod core;
+pub mod commonlib;
 pub mod smoke;
 
 pub fn open(filename: &str) -> Result<String, std::io::Error> {
@@ -21,30 +27,129 @@ pub fn open(filename: &str) -> Result<String, std::io::Error> {
 }
 
 
-pub struct ClClient {
+pub struct Client {
     appkey: String,
     baseurl: String,
-    tokenprovider: String,
-    //webclient: reqwest::Client,
+    tokenprovider: TokenProvider,
+    webclient: reqwest::Client,
+    azure_client: ClientSecretCredential
 }
 
-impl ClClient {
-    fn build(&self, test_target: TestTarget) -> ClClient {
+trait CommonLibraryApi {
+    fn get_library(group: String) -> Vec<Library>;
+    fn get_code(group: String) -> Vec<Code>;
+    fn get_schema(schema_options: SchemaOptions) -> Schema;
+    fn get_code_mapped(library: String, schema: String, facility: String) -> Message;
+    fn get_genericview_definition(library: String) -> ViewDefinition;
+}
+#[async_trait]
+trait Configure {
+    fn build(&self, test_target: TestTarget) -> Client;
+    async fn get_request<'de, T: Clone + Deserialize<'de>>(&self, url: String) -> T;
+}
+
+#[async_trait]
+impl Configure for Client {
+    fn build(&self, test_target: TestTarget) -> Client {
         let appkey = test_target.get_config_value("CommonLibraryAppId");
         let baseurl = test_target.get_config_value("CommonLibraryApiBaseAddress");
-        let tokenprovider = test_target.get_config_value("TokenProviderConnectionString");
+        let tokenprovider = TokenProvider::from_connectionstring(test_target.get_config_value("TokenProviderConnectionString"));
+        let webclient = reqwest::Client::new();
+        let azure_cli = azure_identity::ClientSecretCredential::new(
+            Arc::new(webclient.clone()),
+            tokenprovider.tenant.clone(),
+            tokenprovider.appid.clone(),
+            tokenprovider.secret.clone(),
+            Default::default()
+        );
 
-        ClClient {
+        Client {
             appkey,
             baseurl,
             tokenprovider,
+            webclient,
+            azure_client: azure_cli,
         }
     }
 
+    async fn get_request<'de, T: Clone + Deserialize<'de>>(&self, url: String) -> T {
+        // unsure what flow to use with AppId.
+
+        if let Ok(tokenresponse) = self.azure_client.get_token(self.appkey.as_str()).await {
+            let resp= self.webclient
+                .get(url)
+                .header("Authorization", format!("Bearer {}", tokenresponse.token.secret()))
+                .send()
+                .await
+                .unwrap()
+                .text()
+                .await
+                .unwrap();
+
+            let item: T =  serde_json::from_str(&*resp).unwrap();
+            item
+        } else {
+            panic!("Unable to auth against Azure");
+        }
+    }
+
+}
+
+struct TokenProvider {
+    pub runas: String,
+    pub tenant: String,
+    pub appid: String,
+    pub secret: String,
+}
+
+impl TokenProvider {
+    fn from_connectionstring(connectionstring: String) -> TokenProvider {
+        let mut pairs: Vec<&str> = connectionstring.split(';').collect();
+        let runas: Vec<&str> = pairs.pop().unwrap().split('=').collect();
+        let appid: Vec<&str> = pairs.pop().unwrap().split('=').collect();
+        let tenantid: Vec<&str> = pairs.pop().unwrap().split('=').collect();
+        let secret: Vec<&str> = pairs.pop().unwrap().split('=').collect();
+        TokenProvider {
+            tenant: tenantid.last().unwrap().to_string(),
+            runas: runas.last().unwrap().to_string(),
+            appid: appid.last().unwrap().to_string(),
+            secret: secret.last().unwrap().to_string(),
+        }
+    }
+}
+
+impl CommonLibraryApi for Client {
+
+    // /api/Library?name={name}&group={group}&scope={scope}&name={name}&isValid={isValid}"
     fn get_library(group: String) -> Vec<Library>{
         todo!()
     }
+    fn get_code(library: String) -> Vec<Code> {
+        todo!()
+    }
+
+    fn get_schema(schema_options: SchemaOptions) -> Schema {
+        todo!()
+    }
+
+    fn get_code_mapped(library: String, schema: String, facility: String) -> Message {
+        todo!()
+    }
+
+    fn get_genericview_definition(library: String) -> ViewDefinition {
+        todo!()
+    }
 }
+
+#[derive(Deserialize)]
+struct Schema;
+struct SchemaOptions;
+
+#[derive(Deserialize)]
+struct ViewDefinition;
+
+#[derive(Deserialize)]
+struct Message;
 
 #[derive(Deserialize)]
 struct Library {
@@ -73,10 +178,44 @@ struct Library {
 }
 
 #[derive(Deserialize)]
-struct Attachment;
+struct Attachment {
+
+}
 
 #[derive(Deserialize)]
-struct AttributeDefinition;
+enum AttributeType {
+    String,
+    Int,
+    Float,
+    Bool,
+    Date,
+    DateTime,
+    CodeRef,
+    LibraryRef,
+    Uri,
+}
+
+#[derive(Deserialize)]
+struct AttributeDefinition {
+    name: String,
+    description: String,
+    display_as: String,
+    // StringEnumConverter
+    attribute_type: AttributeType,
+    sequence_number: i32,
+    required: bool,
+    include_identity: bool,
+    reference_library_name: String,
+    reference_display_mode: CodeRefDisplayMode,
+}
+
+#[derive(Deserialize)]
+enum CodeRefDisplayMode {
+    Identity = 0,
+    Name = 1,
+    Description = 2,
+    NameAndDescription =3 ,
+}
 
 #[derive(Deserialize)]
 struct CodeSet {
@@ -107,5 +246,11 @@ struct Code {
 
 #[derive(Deserialize)]
 struct CodeAttribute {
+
+}
+
+
+#[cfg(test)]
+mod test {
 
 }
