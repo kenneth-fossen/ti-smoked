@@ -26,13 +26,15 @@ pub fn open(filename: &str) -> Result<String, std::io::Error> {
     Ok(content)
 }
 
-
-pub struct Client {
+pub struct ClientFactory {
     appkey: String,
     baseurl: String,
     tokenprovider: TokenProvider,
+}
+pub struct Client {
+    appkey: String,
     webclient: reqwest::Client,
-    azure_client: ClientSecretCredential
+    azure_client: ClientSecretCredential,
 }
 
 trait CommonLibraryApi {
@@ -44,34 +46,52 @@ trait CommonLibraryApi {
 }
 #[async_trait]
 trait Configure {
-    fn build(&self, test_target: TestTarget) -> Client;
-    async fn get_request<'de, T: Clone + Deserialize<'de>>(&self, url: String) -> T;
+    fn configure(&self, test_target: TestTarget) -> ClientFactory;
+    fn build(&self) -> Client;
+
 }
 
 #[async_trait]
-impl Configure for Client {
-    fn build(&self, test_target: TestTarget) -> Client {
+trait CommonLibClient {
+    async fn get_request<'de, T: Clone + Deserialize<'de>>(&self, url: String) -> T;
+}
+
+
+
+#[async_trait]
+impl Configure for ClientFactory {
+    fn configure(&self, test_target: TestTarget) -> ClientFactory {
         let appkey = test_target.get_config_value("CommonLibraryAppId");
         let baseurl = test_target.get_config_value("CommonLibraryApiBaseAddress");
         let tokenprovider = TokenProvider::from_connectionstring(test_target.get_config_value("TokenProviderConnectionString"));
+
+        ClientFactory {
+            appkey,
+            baseurl,
+            tokenprovider,
+        }
+    }
+
+    fn build(&self) -> Client {
         let webclient = reqwest::Client::new();
         let azure_cli = azure_identity::ClientSecretCredential::new(
             Arc::new(webclient.clone()),
-            tokenprovider.tenant.clone(),
-            tokenprovider.appid.clone(),
-            tokenprovider.secret.clone(),
+            self.tokenprovider.tenant.clone(),
+            self.tokenprovider.appid.clone(),
+            self.tokenprovider.secret.clone(),
             Default::default()
         );
 
         Client {
-            appkey,
-            baseurl,
-            tokenprovider,
-            webclient,
+            appkey: self.appkey.clone(),
+            webclient: webclient.clone(),
             azure_client: azure_cli,
         }
     }
+}
 
+#[async_trait]
+impl CommonLibClient for Client {
     async fn get_request<'de, T: Clone + Deserialize<'de>>(&self, url: String) -> T {
         // unsure what flow to use with AppId.
 
@@ -86,14 +106,14 @@ impl Configure for Client {
                 .await
                 .unwrap();
 
-            let item: T =  serde_json::from_str(&*resp).unwrap();
+            let item: T =  serde_json::from_str(*resp).unwrap();
             item
         } else {
             panic!("Unable to auth against Azure");
         }
     }
-
 }
+
 
 struct TokenProvider {
     pub runas: String,
