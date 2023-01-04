@@ -23,12 +23,12 @@ pub struct Client {
 }
 
 #[async_trait]
-trait CommonLibraryApi {
+pub trait CommonLibraryApi {
     async fn get_library(&self, group: String) -> Vec<Library>;
     async fn get_code(&self,group: String) -> Vec<Code>;
-    fn get_schema(&self,schema_options: SchemaOptions) -> Schema;
+    async fn get_schema(&self,_schema_options: SchemaOptions) -> Schema;
     async fn get_code_mapped(&self,library: String, schema: String, facility: String) -> Message;
-    fn get_genericview_definition(&self,library: String) -> ViewDefinition;
+    async fn get_genericview_definition(&self,_library: String) -> ViewDefinition;
 }
 
 #[async_trait]
@@ -106,7 +106,6 @@ impl CommonLibClient for Client {
 
 #[derive(Debug)]
 struct TokenProvider {
-    pub runas: String,
     pub tenant: String,
     pub appid: String,
     pub secret: String,
@@ -118,10 +117,8 @@ impl TokenProvider {
         let secret: Vec<&str> = pairs.pop().unwrap().split('=').collect();
         let tenantid: Vec<&str> = pairs.pop().unwrap().split('=').collect();
         let appid: Vec<&str> = pairs.pop().unwrap().split('=').collect();
-        let runas: Vec<&str> = pairs.pop().unwrap().split('=').collect();
         TokenProvider {
             tenant: tenantid.last().unwrap().to_string(),
-            runas: runas.last().unwrap().to_string(),
             appid: appid.last().unwrap().to_string(),
             secret: secret.last().unwrap().to_string(),
         }
@@ -130,8 +127,6 @@ impl TokenProvider {
 
 #[async_trait]
 impl CommonLibraryApi for Client {
-
-
     async fn get_library(&self,group: String) -> Vec<Library>{
         // /api/Library?name={name}&group={group}&scope={scope}&name={name}&isValid={isValid}"
         let baseurl = &self.baseurl;
@@ -145,7 +140,7 @@ impl CommonLibraryApi for Client {
         self.get_request::<Vec<Code>>(url).await
     }
 
-    fn get_schema(&self,schema_options: SchemaOptions) -> Schema {
+    async fn get_schema(&self, _schema_options: SchemaOptions) -> Schema {
         todo!()
     }
 
@@ -157,7 +152,7 @@ impl CommonLibraryApi for Client {
     }
 
 
-    fn get_genericview_definition(&self,library: String) -> ViewDefinition {
+    async fn get_genericview_definition(&self,_library: String) -> ViewDefinition {
         todo!()
     }
 }
@@ -190,6 +185,7 @@ mod test {
         let test_target = get_config();
         let client = ClientFactory::configure(test_target).build();
         let resp = client.get_library("Facility and Project".to_string()).await;
+        assert_eq!(resp.len() > 0, true)
     }
 
     #[tokio::test]
@@ -198,6 +194,7 @@ mod test {
 
         let client = ClientFactory::configure(test_target).build();
         let resp = client.get_code("Facility".to_string()).await;
+        assert_eq!(resp.len() > 0, true)
     }
 
     #[tokio::test]
@@ -205,5 +202,6 @@ mod test {
         let test_target = get_config();
         let client = ClientFactory::configure(test_target).build();
         let resp = client.get_code_mapped("CableCode".to_string(), "CommonLibrary".to_string(), "AHA".to_string() ).await;
+        assert_eq!(resp.objects.len() > 0, true)
     }
 }

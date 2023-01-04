@@ -1,6 +1,6 @@
 use std::time::Instant;
 use async_trait::async_trait;
-use crate::smoke::{LibrariesTest, ResultBuilder, TestResult, TestResultBuilder};
+use crate::smoke::{LibrariesTest, ResultBuilder, SmokeTest, TestResult, TestResultBuilder};
 
 
 #[async_trait]

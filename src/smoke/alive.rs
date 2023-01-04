@@ -16,7 +16,7 @@ impl SmokeTest for AliveTest {
         }
 
         let res = self
-            .webclient
+            .client
             .get(format!("{baseurl}/alive"))
             .send()
             .await

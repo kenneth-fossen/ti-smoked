@@ -6,10 +6,11 @@
 // unable to use Async fn in trait due to the use of Box<dyn Trait>
 #![allow(dead_code, unused_variables, unreachable_code)]
 
-use ti_smoked::commonlib::{SmokeTest, TestTarget};
-use ti_smoked::{ClientFactory, open, Configure};
+use ti_smoked::commonlib::{Configure, ClientFactory};
+use ti_smoked::commonlib::entities::Code;
+use ti_smoked::open;
 
-use ti_smoked::smoke::{alive::AliveTest, dummy::DummyTest,mapped_codes::MappedCodeTest};
+use ti_smoked::smoke::{SmokeTest, AliveTest, DummyTest, MappedCodeTest, TestTarget, CodesTest};
 
 #[tokio::main]
 async fn main() {
@@ -27,15 +28,20 @@ async fn main() {
     commands.push(Box::new(AliveTest {
         name: "Alive Test".to_string(),
         config: test_target.clone(),
-        webclient: http_client.clone(),
+        client: http_client.clone(),
     }));
     commands.push(Box::new(DummyTest {
         name:"Dummy Test".to_string(),
     }));
+    // commands.push(Box::new(CodesTest {
+    //     name: "Codes Test".to_string(),
+    //     config: test_target.clone(),
+    //     client,
+    // }));
     commands.push(Box::new(MappedCodeTest {
         name: "MappedCode".to_string(),
         config: test_target.clone(),
-        webclient: client,
+        client,
     }));
 
     println!("Test Target: {}\n", &test_target.name);
@@ -46,16 +52,13 @@ async fn main() {
 async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     commands.reverse();
     println!("| Detector\t | Failure\t | Duration | Details \t |");
-    println!("--------------------------------------------------");
+    println!("----------------------------------------------------------");
 
     while let Some(cmd) = commands.pop() {
         println!("{}", cmd.run().await)
     }
-    //commands
-    //    .iter()
-    //    .for_each(async |cmd| println!("{}", cmd.run().await));
 
-    println!("--------------------------------------------------\n");
+    println!("----------------------------------------------------------\n");
     println!("Total tests:\t{}", commands.len());
     println!("\tPassed:\t{}", commands.len());
 }

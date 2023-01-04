@@ -1,11 +1,13 @@
-use crate::Client;
 pub mod alive;
 pub mod dummy;
 pub mod libraries;
 pub mod mapped_codes;
+mod codes;
+
 use serde::Deserialize;
 use std::{fmt::Display, time::Duration, time::Instant};
 use async_trait::async_trait;
+use crate::commonlib::Client;
 
 pub fn i_am_alive() {
     println!("I'm alive");
@@ -98,7 +100,7 @@ impl Display for TestResult {
         };
         write!(
             formatter,
-            "| {} | {}\t\t\t | {} ms \t| {} \t\t |",
+            "| {}\t | {}\t\t | {} ms \t| {}\t|",
             self.name,
             result,
             self.duration.as_millis(),
@@ -140,17 +142,23 @@ pub struct DummyTest {
 pub struct AliveTest {
     pub name: String,
     pub config: TestTarget,
-    pub webclient: reqwest::Client,
+    pub client: reqwest::Client,
 }
 
 pub struct LibrariesTest {
     pub name: String,
     pub config: TestTarget,
-    pub webclient: Client,
+    pub client: Client,
 }
 
 pub struct MappedCodeTest {
     pub name: String,
     pub config: TestTarget,
-    pub webclient: Client,
+    pub client: Client,
+}
+
+pub struct CodesTest {
+    pub name: String,
+    pub config: TestTarget,
+    pub client: Client,
 }

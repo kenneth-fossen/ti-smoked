@@ -1,31 +1,32 @@
+#![allow(dead_code)]
 use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 
 #[derive(Deserialize)]
-pub(crate) struct Schema;
-pub(crate) struct SchemaOptions;
+pub struct Schema;
+pub struct SchemaOptions;
 
 #[derive(Deserialize)]
-pub(crate) struct ViewDefinition;
+pub struct ViewDefinition;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Message {
+pub struct Message {
     id: Uuid,
     timestamp: DateTime<Utc>,
     schema: Option<Schema>,
     metadata: Vec<MessageAttribute>,
-    objects: Vec<MessagingObject>,
+    pub objects: Vec<MessagingObject>,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MessageAttribute;
+pub struct MessageAttribute;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MessagingAttribute {
+pub struct MessagingAttribute {
     name: String,
     behavior: Option<String>,
     value: String,
@@ -33,15 +34,15 @@ struct MessagingAttribute {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MessagingSubObject;
+pub struct MessagingSubObject;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MessagingRelationship;
+pub struct MessagingRelationship;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-struct MessagingObject {
+pub struct MessagingObject {
     name: String,
     attributes: Vec<MessagingAttribute>,
     sub_objects: Vec<MessagingSubObject>,
@@ -49,13 +50,13 @@ struct MessagingObject {
 }
 
 #[derive(Deserialize, Debug)]
-struct Attachment {
+pub struct Attachment {
 
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Library {
+pub struct Library {
     definition: String,
     alias: String,
     is_global: bool,
@@ -99,7 +100,7 @@ enum AttributeType {
 
 #[derive(Deserialize,Debug)]
 #[serde(rename_all = "camelCase")]
-struct AttributeDefinition {
+pub struct AttributeDefinition {
     name: String,
     description: String,
     display_as: String,
@@ -113,7 +114,7 @@ struct AttributeDefinition {
 }
 
 #[derive(Deserialize, Debug)]
-enum CodeRefDisplayMode {
+pub enum CodeRefDisplayMode {
     Identity = 0,
     Name = 1,
     Description = 2,
@@ -122,7 +123,7 @@ enum CodeRefDisplayMode {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct CodeSet {
+pub struct CodeSet {
     codes: Vec<Code>,
     library: Library,
     code_name_regex: Option<String>,
@@ -137,18 +138,21 @@ struct CodeSet {
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub(crate) struct Code {
-    project: Option<String>,
+pub struct Code {
+    pub name: String,
+    pub is_valid: bool,
+    pub description: Option<String>,
+    pub project: Option<String>,
     // Display name Code Set, ignore null
-    code_set: Option<CodeSet>,
-    code_set_name: Option<String>,
-    attributes: Vec<CodeAttribute>,
-    identity: String,
-    iri: Option<String>,
-    attachment: Option<Attachment>,
-    attachment_key: Option<Uuid>,
+    pub code_set: Option<CodeSet>,
+    pub code_set_name: Option<String>,
+    pub attributes: Vec<CodeAttribute>,
+    pub identity: String,
+    pub iri: Option<String>,
+    pub attachment: Option<Attachment>,
+    pub attachment_key: Option<Uuid>,
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-struct CodeAttribute {}
+pub struct CodeAttribute {}
