@@ -1,11 +1,7 @@
-use crate::commonlib::TestResult;
-use crate::commonlib::{ResultBuilder, SmokeTest, TestResultBuilder};
 use std::time::Instant;
 use async_trait::async_trait;
+use crate::smoke::{DummyTest, ResultBuilder, SmokeTest, TestResult, TestResultBuilder};
 
-pub struct DummyTest {
-    pub name: String,
-}
 
 #[async_trait]
 impl SmokeTest for DummyTest {

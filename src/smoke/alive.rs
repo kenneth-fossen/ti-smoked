@@ -1,14 +1,7 @@
-use crate::commonlib::TestResult;
-use crate::commonlib::TestTarget;
-use crate::commonlib::{ResultBuilder, SmokeTest, TestResultBuilder};
 use std::time::Instant;
 use async_trait::async_trait;
+use crate::smoke::{AliveTest, ResultBuilder, SmokeTest, TestResult, TestResultBuilder};
 
-pub struct AliveTest {
-    pub name: String,
-    pub config: TestTarget,
-    pub webclient: reqwest::Client,
-}
 
 #[async_trait]
 impl SmokeTest for AliveTest {

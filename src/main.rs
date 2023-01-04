@@ -6,10 +6,10 @@
 // unable to use Async fn in trait due to the use of Box<dyn Trait>
 #![allow(dead_code, unused_variables, unreachable_code)]
 
-use ti_smoked::core::{SmokeTest, TestTarget};
-use ti_smoked::open;
+use ti_smoked::commonlib::{SmokeTest, TestTarget};
+use ti_smoked::{ClientFactory, open, Configure};
 
-use ti_smoked::smoke::{alive::AliveTest, dummy::DummyTest};
+use ti_smoked::smoke::{alive::AliveTest, dummy::DummyTest,mapped_codes::MappedCodeTest};
 
 #[tokio::main]
 async fn main() {
@@ -21,15 +21,21 @@ async fn main() {
     println!();
 
     let http_client = reqwest::Client::new();
+    let client = ClientFactory::configure(test_target.clone()).build();
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
     commands.push(Box::new(AliveTest {
         name: "Alive Test".to_string(),
         config: test_target.clone(),
-        webclient: http_client,
+        webclient: http_client.clone(),
     }));
     commands.push(Box::new(DummyTest {
         name:"Dummy Test".to_string(),
+    }));
+    commands.push(Box::new(MappedCodeTest {
+        name: "MappedCode".to_string(),
+        config: test_target.clone(),
+        webclient: client,
     }));
 
     println!("Test Target: {}\n", &test_target.name);
