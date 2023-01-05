@@ -21,7 +21,10 @@ impl SmokeTest for CodesTest {
             return test_result.failed();
         }
         let jsv = facility.first().unwrap().to_owned();
-        assert_eq!(jsv.identity, "JSV");
+        let identity = jsv.identity.eq("JSV");
+        let descption = jsv.description.as_ref().unwrap().eq("Johan Sverdrup");
+        let valid = jsv.is_valid;
+
 
         test_result.failed()
     }
