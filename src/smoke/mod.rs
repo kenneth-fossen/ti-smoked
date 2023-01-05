@@ -3,6 +3,7 @@ pub mod dummy;
 pub mod libraries;
 pub mod mapped_codes;
 mod codes;
+mod schema;
 
 use serde::Deserialize;
 use std::{fmt::Display, time::Duration, time::Instant};
@@ -113,7 +114,7 @@ impl Display for TestResult {
 #[serde(rename_all = "PascalCase")]
 pub struct TestTarget {
     pub name: String,
-    config: Vec<ConfigItem>,
+    pub config: Vec<ConfigItem>,
 }
 
 impl TestTarget {
@@ -130,7 +131,7 @@ impl TestTarget {
 
 #[derive(Debug, Deserialize, Clone)]
 #[serde(rename_all = "PascalCase")]
-struct ConfigItem {
+pub struct ConfigItem {
     key: String,
     value: String,
 }
@@ -158,6 +159,12 @@ pub struct MappedCodeTest {
 }
 
 pub struct CodesTest {
+    pub name: String,
+    pub config: TestTarget,
+    pub client: Client,
+}
+
+pub struct SchemaTest {
     pub name: String,
     pub config: TestTarget,
     pub client: Client,

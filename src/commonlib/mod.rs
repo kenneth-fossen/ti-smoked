@@ -5,16 +5,16 @@ use async_trait::async_trait;
 use azure_identity::ClientSecretCredential;
 use azure_core::auth::TokenCredential;
 use serde::de::DeserializeOwned;
+use serde::Serialize;
 use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
 use crate::smoke::TestTarget;
-
-
 
 pub struct ClientFactory {
     appkey: String,
     baseurl: String,
     tokenprovider: TokenProvider,
 }
+
 pub struct Client {
     appkey: String,
     baseurl: String,
@@ -40,7 +40,10 @@ pub trait Configure {
 #[async_trait]
 pub trait CommonLibClient {
     async fn do_request(&self, url: String) -> String;
+    async fn do_post_request(&self, url: String) -> String;
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T;
+    async fn post_request<T: DeserializeOwned, U:Serialize>(&self, url: String, body: U) -> T;
+
 }
 
 #[async_trait]
@@ -94,9 +97,39 @@ impl CommonLibClient for Client {
         }
     }
 
+    async fn do_post_request(&self, url: String) -> String {
+        if let Ok(tokenresponse) = self.azure_client.get_token(self.appkey.as_str()).await {
+            self.webclient
+                .get(url)
+                .header("Authorization", format!("Bearer {}", tokenresponse.token.secret()))
+                .body("")
+                .send()
+                .await
+                .unwrap()
+                .text()
+                .await
+                .unwrap()
+        } else {
+            panic!("Unable to auth against Azure");
+        }
+    }
+
+
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T {
         let resp = self.do_request(url).await;
-        //println!("Response: {:?}",resp);
+        // println!("Response: {:?}",resp);
+        let item: T = serde_json::from_str(resp.as_str()).unwrap();
+        item
+    }
+
+    async fn post_request<T: DeserializeOwned, U: Serialize>(&self, url: String, body: U) -> T {
+
+        let resp = if let Ok(json) = serde_json::to_string(&body) {
+            self.do_post_request(json.clone()).await
+        } else {
+            "".to_string()
+        };
+
         let item: T = serde_json::from_str(resp.as_str()).unwrap();
         item
     }
@@ -141,14 +174,16 @@ impl CommonLibraryApi for Client {
     }
 
     async fn get_schema(&self, _schema_options: SchemaOptions) -> Schema {
-        todo!()
+        let baseurl = &self.baseurl;
+        let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
+        self.get_request::<Schema>(url).await
     }
 
     async fn get_code_mapped(&self,library: String, schema: String, facility: String) -> Message {
         // $"/api/Code/Mapped/{library}?schema={schema}&scope={scope}");
         let baseurl = &self.baseurl;
-        let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
-        self.get_request::<Message>(url).await
+        let url = format!("{baseurl}/api/Schema");
+        self.post_request::<Message>(url).await
     }
 
 
@@ -203,5 +238,15 @@ mod test {
         let client = ClientFactory::configure(test_target).build();
         let resp = client.get_code_mapped("CableCode".to_string(), "CommonLibrary".to_string(), "AHA".to_string() ).await;
         assert_eq!(resp.objects.len() > 0, true)
+    }
+
+    #[tokio::test]
+    async fn get_schema() {
+        let test_targets = get_config();
+        let client = ClientFactory::configure(test_targets).build();
+
+        let schema_options = SchemaOptions {schema_name: "TR3111".to_string() };
+        let resp = client.get_schema(schema_options).await;
+
     }
 }

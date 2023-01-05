@@ -1,4 +1,4 @@
-#![feature(async_closure)]
+//#![feature(async_closure)]
 //#![feature(async_iterator)]
 
 //#![feature(async_fn_in_trait)]
@@ -7,24 +7,23 @@
 #![allow(dead_code, unused_variables, unreachable_code)]
 
 use ti_smoked::commonlib::{Configure, ClientFactory};
-use ti_smoked::commonlib::entities::Code;
 use ti_smoked::open;
 
-use ti_smoked::smoke::{SmokeTest, AliveTest, DummyTest, MappedCodeTest, TestTarget, CodesTest};
+use ti_smoked::smoke::{SmokeTest, AliveTest, DummyTest, MappedCodeTest, TestTarget, CodesTest, LibrariesTest};
 
 #[tokio::main]
 async fn main() {
     println!("Hello, world!\n");
 
-    let file_content = open("dev.json").expect("Failed to open the file");
+    let file_content = open("prod.json").expect("Failed to open the file");
     let test_target: TestTarget =
         serde_json::from_str(file_content.as_str()).expect("Failed to parse JSON");
     println!();
 
     let http_client = reqwest::Client::new();
-    let client = ClientFactory::configure(test_target.clone()).build();
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
+
     commands.push(Box::new(AliveTest {
         name: "Alive Test".to_string(),
         config: test_target.clone(),
@@ -33,15 +32,20 @@ async fn main() {
     commands.push(Box::new(DummyTest {
         name:"Dummy Test".to_string(),
     }));
-    // commands.push(Box::new(CodesTest {
-    //     name: "Codes Test".to_string(),
-    //     config: test_target.clone(),
-    //     client,
-    // }));
+    commands.push(Box::new(CodesTest {
+        name: "Codes Test".to_string(),
+        config: test_target.clone(),
+        client: ClientFactory::configure(test_target.clone()).build()
+    }));
     commands.push(Box::new(MappedCodeTest {
         name: "MappedCode".to_string(),
         config: test_target.clone(),
-        client,
+        client: ClientFactory::configure(test_target.clone()).build()
+    }));
+    commands.push(Box::new(LibrariesTest {
+        name: "Get Libraries".to_string(),
+        config: test_target.clone(),
+        client: ClientFactory::configure(test_target.clone()).build(),
     }));
 
     println!("Test Target: {}\n", &test_target.name);
@@ -59,6 +63,5 @@ async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     }
 
     println!("----------------------------------------------------------\n");
-    println!("Total tests:\t{}", commands.len());
-    println!("\tPassed:\t{}", commands.len());
+
 }

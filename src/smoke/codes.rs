@@ -1,5 +1,6 @@
 use std::time::Instant;
 use async_trait::async_trait;
+use chrono::Datelike;
 use crate::smoke::{SmokeTest, TestResult, TestResultBuilder, ResultBuilder, CodesTest};
 use crate::commonlib::CommonLibraryApi;
 use crate::commonlib::entities::Code;
@@ -20,13 +21,20 @@ impl SmokeTest for CodesTest {
         if facility.is_empty() {
             return test_result.failed();
         }
+
+
         let jsv = facility.first().unwrap().to_owned();
-        let identity = jsv.identity.eq("JSV");
-        let descption = jsv.description.as_ref().unwrap().eq("Johan Sverdrup");
-        let valid = jsv.is_valid;
+        assert_eq!(jsv.identity, "JSV", "Should be JSV for the identity");
+        assert_eq!(jsv.description.as_ref().unwrap(), "Johan Sverdrup", "Description should be Johan Sverdrup");
+        assert_eq!(jsv.is_valid, true, "JSV Should be valid");
+        assert_eq!(jsv.date_created.year(), 2019, "JSV was created in 2019");
+        assert!(jsv.date_updated.year() > jsv.date_created.year(), "Cannot be updated before created");
+        let sapplant: Vec<_> = jsv.attributes.iter().filter(|attrib | attrib.definition_name.eq("SAPPlant")).collect();
+        assert_eq!(sapplant.first().unwrap().display_value,"See subinstallations", "JSV.SAPPlant error");
+        let tie: Vec<_> = jsv.attributes.iter().filter(|attrib | attrib.definition_name.eq("IsForTIE")).collect();
+        assert_eq!(tie.first().unwrap().display_value, "True", "JSV.IsForTIE error");
 
-
-        test_result.failed()
+        test_result.success()
     }
 }
 
