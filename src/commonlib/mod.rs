@@ -6,6 +6,7 @@ use azure_identity::ClientSecretCredential;
 use azure_core::auth::TokenCredential;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use tokio::time::Instant;
 use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
 use crate::smoke::TestTarget;
 
@@ -42,7 +43,7 @@ pub trait CommonLibClient {
     async fn do_request(&self, url: String) -> String;
     async fn do_post_request(&self, url: String) -> String;
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T;
-    async fn post_request<T: DeserializeOwned, U:Serialize>(&self, url: String, body: U) -> T;
+    //async fn post_request<T: DeserializeOwned, U:Serialize>(&self, url: String, body: U) -> T;
 
 }
 
@@ -61,7 +62,7 @@ impl Configure for ClientFactory {
     }
 
     fn build(&self) -> Client {
-        let webclient = reqwest::Client::new();
+        let webclient = reqwest::Client::builder().build().unwrap();
         let azure_cli = azure_identity::ClientSecretCredential::new(
             Arc::new(webclient.clone()),
             self.tokenprovider.tenant.clone(),
@@ -82,16 +83,18 @@ impl Configure for ClientFactory {
 #[async_trait]
 impl CommonLibClient for Client {
     async fn do_request(&self, url: String) -> String {
+
         if let Ok(tokenresponse) = self.azure_client.get_token(self.appkey.as_str()).await {
-            self.webclient
+            let time = Instant::now();
+            let response  = self.webclient
                 .get(url)
                 .header("Authorization", format!("Bearer {}", tokenresponse.token.secret()))
                 .send()
-                .await
-                .unwrap()
-                .text()
-                .await
-                .unwrap()
+                .await.unwrap();
+            let res = response.text().await.unwrap();
+
+            println!("Reqwest: {}ms", time.elapsed().as_millis());
+            res
         } else {
             panic!("Unable to auth against Azure");
         }
@@ -122,17 +125,18 @@ impl CommonLibClient for Client {
         item
     }
 
-    async fn post_request<T: DeserializeOwned, U: Serialize>(&self, url: String, body: U) -> T {
-
-        let resp = if let Ok(json) = serde_json::to_string(&body) {
+    /*async fn post_request<T, U>(&self, url: String, body: U) -> T
+        where T: DeserializeOwned, U: Serialize + Send {
+        todo!();
+        /*let resp = if let Ok(json) = serde_json::to_string(&body) {
             self.do_post_request(json.clone()).await
         } else {
             "".to_string()
         };
 
         let item: T = serde_json::from_str(resp.as_str()).unwrap();
-        item
-    }
+        item*/
+    }*/
 }
 
 
@@ -174,16 +178,17 @@ impl CommonLibraryApi for Client {
     }
 
     async fn get_schema(&self, _schema_options: SchemaOptions) -> Schema {
-        let baseurl = &self.baseurl;
-        let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
-        self.get_request::<Schema>(url).await
+        todo!();
+        /*let baseurl = &self.baseurl;
+        //let url = format!("{baseurl}/api/schema");
+        self.get_request::<Schema>(url).await*/
     }
 
     async fn get_code_mapped(&self,library: String, schema: String, facility: String) -> Message {
         // $"/api/Code/Mapped/{library}?schema={schema}&scope={scope}");
         let baseurl = &self.baseurl;
-        let url = format!("{baseurl}/api/Schema");
-        self.post_request::<Message>(url).await
+        let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
+        self.get_request::<Message>(url).await
     }
 
 

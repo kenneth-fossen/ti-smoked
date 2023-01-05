@@ -20,7 +20,7 @@ async fn main() {
         serde_json::from_str(file_content.as_str()).expect("Failed to parse JSON");
     println!();
 
-    let http_client = reqwest::Client::new();
+    let http_client = reqwest::Client::builder().build().unwrap();
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
 
