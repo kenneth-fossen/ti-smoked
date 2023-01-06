@@ -1,8 +1,8 @@
-use std::time::Instant;
-use async_trait::async_trait;
-use crate::commonlib::CommonLibraryApi;
 use crate::commonlib::entities::SchemaOptions;
+use crate::commonlib::CommonLibraryApi;
 use crate::smoke::{ResultBuilder, SchemaTest, SmokeTest, TestResult, TestResultBuilder};
+use async_trait::async_trait;
+use std::time::Instant;
 
 #[async_trait]
 impl SmokeTest for SchemaTest {
@@ -15,7 +15,6 @@ impl SmokeTest for SchemaTest {
         let schema_options = SchemaOptions { schema_name };
         let res = self.client.get_schema(schema_options).await;
 
-        
         test_result.failed()
     }
 }

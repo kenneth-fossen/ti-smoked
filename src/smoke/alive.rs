@@ -1,7 +1,6 @@
-use std::time::Instant;
-use async_trait::async_trait;
 use crate::smoke::{AliveTest, ResultBuilder, SmokeTest, TestResult, TestResultBuilder};
-
+use async_trait::async_trait;
+use std::time::Instant;
 
 #[async_trait]
 impl SmokeTest for AliveTest {
@@ -26,10 +25,7 @@ impl SmokeTest for AliveTest {
             test_result.success()
         } else {
             test_result
-                .set_details(format!(
-                    "HTTP Request was unsuccessful: {}",
-                    res.status()
-                ))
+                .set_details(format!("HTTP Request was unsuccessful: {}", res.status()))
                 .failed()
         };
         test_result

@@ -1,7 +1,6 @@
-use std::time::Instant;
-use async_trait::async_trait;
 use crate::smoke::{DummyTest, ResultBuilder, SmokeTest, TestResult, TestResultBuilder};
-
+use async_trait::async_trait;
+use std::time::Instant;
 
 #[async_trait]
 impl SmokeTest for DummyTest {

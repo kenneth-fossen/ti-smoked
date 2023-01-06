@@ -1,7 +1,7 @@
 #![allow(dead_code)]
-use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer};
+use uuid::Uuid;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -69,9 +69,7 @@ pub struct MessagingObject {
 }
 
 #[derive(Deserialize, Debug)]
-pub struct Attachment {
-
-}
+pub struct Attachment {}
 
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -118,7 +116,7 @@ enum AttributeType {
     Uri,
 }
 
-#[derive(Deserialize,Debug)]
+#[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeDefinition {
     name: String,
@@ -138,7 +136,7 @@ pub enum CodeRefDisplayMode {
     Identity = 0,
     Name = 1,
     Description = 2,
-    NameAndDescription =3 ,
+    NameAndDescription = 3,
 }
 
 #[derive(Deserialize, Debug)]
@@ -198,8 +196,8 @@ pub struct ReferenceCode {
 pub struct AttributeValue;
 
 fn str_to_time<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     let mut timestr = String::deserialize(d)?;
     if !timestr.ends_with('Z') {

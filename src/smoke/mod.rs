@@ -1,14 +1,14 @@
 pub mod alive;
+mod codes;
 pub mod dummy;
 pub mod libraries;
 pub mod mapped_codes;
-mod codes;
 mod schema;
 
+use crate::commonlib::Client;
+use async_trait::async_trait;
 use serde::Deserialize;
 use std::{fmt::Display, time::Duration, time::Instant};
-use async_trait::async_trait;
-use crate::commonlib::Client;
 
 pub fn i_am_alive() {
     println!("I'm alive");

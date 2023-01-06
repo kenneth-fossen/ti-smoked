@@ -6,10 +6,12 @@
 // unable to use Async fn in trait due to the use of Box<dyn Trait>
 #![allow(dead_code, unused_variables, unreachable_code)]
 
-use ti_smoked::commonlib::{Configure, ClientFactory};
+use ti_smoked::commonlib::{ClientFactory, Configure};
 use ti_smoked::open;
 
-use ti_smoked::smoke::{SmokeTest, AliveTest, DummyTest, MappedCodeTest, TestTarget, CodesTest, LibrariesTest};
+use ti_smoked::smoke::{
+    AliveTest, CodesTest, DummyTest, LibrariesTest, MappedCodeTest, SmokeTest, TestTarget,
+};
 
 #[tokio::main]
 async fn main() {
@@ -23,29 +25,29 @@ async fn main() {
     let http_client = reqwest::Client::builder().build().unwrap();
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
-
+    let azure_client = ClientFactory::configure(test_target.clone()).build().await;
     commands.push(Box::new(AliveTest {
         name: "Alive Test".to_string(),
         config: test_target.clone(),
         client: http_client.clone(),
     }));
     commands.push(Box::new(DummyTest {
-        name:"Dummy Test".to_string(),
+        name: "Dummy Test".to_string(),
     }));
     commands.push(Box::new(CodesTest {
         name: "Codes Test".to_string(),
         config: test_target.clone(),
-        client: ClientFactory::configure(test_target.clone()).build()
+        client: azure_client.clone(),
     }));
     commands.push(Box::new(MappedCodeTest {
         name: "MappedCode".to_string(),
         config: test_target.clone(),
-        client: ClientFactory::configure(test_target.clone()).build()
+        client: azure_client.clone(),
     }));
     commands.push(Box::new(LibrariesTest {
         name: "Get Libraries".to_string(),
         config: test_target.clone(),
-        client: ClientFactory::configure(test_target.clone()).build(),
+        client: azure_client.clone(),
     }));
 
     println!("Test Target: {}\n", &test_target.name);
@@ -63,5 +65,4 @@ async fn run(mut commands: Vec<Box<dyn SmokeTest>>, _target: TestTarget) {
     }
 
     println!("----------------------------------------------------------\n");
-
 }

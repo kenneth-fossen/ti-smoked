@@ -1,14 +1,12 @@
 pub mod entities;
 
-use std::sync::Arc;
-use async_trait::async_trait;
-use azure_identity::ClientSecretCredential;
-use azure_core::auth::TokenCredential;
-use serde::de::DeserializeOwned;
-use serde::Serialize;
-use tokio::time::Instant;
-use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
 use crate::smoke::TestTarget;
+use async_trait::async_trait;
+use azure_core::auth::TokenCredential;
+use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
+use serde::de::DeserializeOwned;
+use std::sync::Arc;
+use tokio::time::Instant;
 
 pub struct ClientFactory {
     appkey: String,
@@ -16,26 +14,28 @@ pub struct ClientFactory {
     tokenprovider: TokenProvider,
 }
 
+#[derive(Clone)]
 pub struct Client {
+    #[allow(dead_code)]
     appkey: String,
     baseurl: String,
     webclient: reqwest::Client,
-    azure_client: ClientSecretCredential,
+    token: String,
 }
 
 #[async_trait]
 pub trait CommonLibraryApi {
     async fn get_library(&self, group: String) -> Vec<Library>;
-    async fn get_code(&self,group: String) -> Vec<Code>;
-    async fn get_schema(&self,_schema_options: SchemaOptions) -> Schema;
-    async fn get_code_mapped(&self,library: String, schema: String, facility: String) -> Message;
-    async fn get_genericview_definition(&self,_library: String) -> ViewDefinition;
+    async fn get_code(&self, group: String) -> Vec<Code>;
+    async fn get_schema(&self, _schema_options: SchemaOptions) -> Schema;
+    async fn get_code_mapped(&self, library: String, schema: String, facility: String) -> Message;
+    async fn get_genericview_definition(&self, _library: String) -> ViewDefinition;
 }
 
 #[async_trait]
 pub trait Configure {
     fn configure(test_target: TestTarget) -> ClientFactory;
-    fn build(&self) -> Client;
+    async fn build(&self) -> Client;
 }
 
 #[async_trait]
@@ -44,7 +44,6 @@ pub trait CommonLibClient {
     async fn do_post_request(&self, url: String) -> String;
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T;
     //async fn post_request<T: DeserializeOwned, U:Serialize>(&self, url: String, body: U) -> T;
-
 }
 
 #[async_trait]
@@ -52,7 +51,9 @@ impl Configure for ClientFactory {
     fn configure(test_target: TestTarget) -> ClientFactory {
         let appkey = test_target.get_config_value("CommonLibraryAppId");
         let baseurl = test_target.get_config_value("CommonLibraryApiBaseAddress");
-        let tokenprovider = TokenProvider::from_connectionstring(test_target.get_config_value("TokenProviderConnectionString"));
+        let tokenprovider = TokenProvider::from_connectionstring(
+            test_target.get_config_value("TokenProviderConnectionString"),
+        );
 
         ClientFactory {
             appkey,
@@ -61,21 +62,26 @@ impl Configure for ClientFactory {
         }
     }
 
-    fn build(&self) -> Client {
+    async fn build(&self) -> Client {
         let webclient = reqwest::Client::builder().build().unwrap();
         let azure_cli = azure_identity::ClientSecretCredential::new(
             Arc::new(webclient.clone()),
             self.tokenprovider.tenant.clone(),
             self.tokenprovider.appid.clone(),
             self.tokenprovider.secret.clone(),
-            Default::default()
+            Default::default(),
         );
+        let token = if let Ok(token_response) = azure_cli.get_token(self.appkey.as_str()).await {
+            token_response.token.secret().to_string()
+        } else {
+            "".to_string()
+        };
 
         Client {
             appkey: self.appkey.clone(),
             baseurl: self.baseurl.clone(),
             webclient: webclient.clone(),
-            azure_client: azure_cli,
+            token,
         }
     }
 }
@@ -83,40 +89,31 @@ impl Configure for ClientFactory {
 #[async_trait]
 impl CommonLibClient for Client {
     async fn do_request(&self, url: String) -> String {
-
-        if let Ok(tokenresponse) = self.azure_client.get_token(self.appkey.as_str()).await {
-            let time = Instant::now();
-            let response  = self.webclient
-                .get(url)
-                .header("Authorization", format!("Bearer {}", tokenresponse.token.secret()))
-                .send()
-                .await.unwrap();
-            let res = response.text().await.unwrap();
-
-            println!("Reqwest: {}ms", time.elapsed().as_millis());
-            res
-        } else {
-            panic!("Unable to auth against Azure");
-        }
+        // let time = Instant::now();
+        self.webclient
+            .get(url)
+            .header("Authorization", format!("Bearer {}", self.token))
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap()
+        // println!("Reqwest: {}ms", time.elapsed().as_millis());
     }
 
     async fn do_post_request(&self, url: String) -> String {
-        if let Ok(tokenresponse) = self.azure_client.get_token(self.appkey.as_str()).await {
-            self.webclient
-                .get(url)
-                .header("Authorization", format!("Bearer {}", tokenresponse.token.secret()))
-                .body("")
-                .send()
-                .await
-                .unwrap()
-                .text()
-                .await
-                .unwrap()
-        } else {
-            panic!("Unable to auth against Azure");
-        }
+        self.webclient
+            .get(url)
+            .header("Authorization", format!("Bearer {}", self.token))
+            .body("")
+            .send()
+            .await
+            .unwrap()
+            .text()
+            .await
+            .unwrap()
     }
-
 
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T {
         let resp = self.do_request(url).await;
@@ -138,8 +135,6 @@ impl CommonLibClient for Client {
         item*/
     }*/
 }
-
-
 
 #[derive(Debug)]
 struct TokenProvider {
@@ -164,13 +159,13 @@ impl TokenProvider {
 
 #[async_trait]
 impl CommonLibraryApi for Client {
-    async fn get_library(&self,group: String) -> Vec<Library>{
+    async fn get_library(&self, group: String) -> Vec<Library> {
         // /api/Library?name={name}&group={group}&scope={scope}&name={name}&isValid={isValid}"
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/Library?group={group}");
         self.get_request::<Vec<Library>>(url).await
     }
-    async fn get_code(&self,library: String) -> Vec<Code> {
+    async fn get_code(&self, library: String) -> Vec<Code> {
         // "/api/Code/{library}?scope={scope}&name={name}&description={description}&isValid={isValid}&$filter={filter}");
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/Code/{library}");
@@ -184,25 +179,22 @@ impl CommonLibraryApi for Client {
         self.get_request::<Schema>(url).await*/
     }
 
-    async fn get_code_mapped(&self,library: String, schema: String, facility: String) -> Message {
+    async fn get_code_mapped(&self, library: String, schema: String, facility: String) -> Message {
         // $"/api/Code/Mapped/{library}?schema={schema}&scope={scope}");
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
         self.get_request::<Message>(url).await
     }
 
-
-    async fn get_genericview_definition(&self,_library: String) -> ViewDefinition {
+    async fn get_genericview_definition(&self, _library: String) -> ViewDefinition {
         todo!()
     }
 }
 
-
-
 #[cfg(test)]
 mod test {
-    use crate::open;
     use super::*;
+    use crate::open;
 
     fn get_config() -> TestTarget {
         let file_content = open("dev.json").expect("Failed to open the file");
@@ -241,7 +233,13 @@ mod test {
     async fn get_mapped_code() {
         let test_target = get_config();
         let client = ClientFactory::configure(test_target).build();
-        let resp = client.get_code_mapped("CableCode".to_string(), "CommonLibrary".to_string(), "AHA".to_string() ).await;
+        let resp = client
+            .get_code_mapped(
+                "CableCode".to_string(),
+                "CommonLibrary".to_string(),
+                "AHA".to_string(),
+            )
+            .await;
         assert_eq!(resp.objects.len() > 0, true)
     }
 
@@ -250,8 +248,9 @@ mod test {
         let test_targets = get_config();
         let client = ClientFactory::configure(test_targets).build();
 
-        let schema_options = SchemaOptions {schema_name: "TR3111".to_string() };
+        let schema_options = SchemaOptions {
+            schema_name: "TR3111".to_string(),
+        };
         let resp = client.get_schema(schema_options).await;
-
     }
 }
