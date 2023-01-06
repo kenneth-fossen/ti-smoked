@@ -9,7 +9,10 @@
 use ti_smoked::commonlib::{ClientFactory, Configure};
 use ti_smoked::open;
 
-use ti_smoked::smoke::{AliveTest, CodesTest, DummyTest, LibrariesTest, MappedCodeTest, SchemaTest, SmokeTest, TestTarget, ViewsTest};
+use ti_smoked::smoke::{
+    AliveTest, CodesTest, DummyTest, LibrariesTest, MappedCodeTest, SchemaTest, SmokeTest,
+    TestTarget, ViewsTest,
+};
 
 #[tokio::main]
 async fn main() {
@@ -25,18 +28,6 @@ async fn main() {
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
     let azure_client = ClientFactory::configure(test_target.clone()).build().await;
 
-    /*
-    -----------------------------------------------------------------------------------------------
-Get schema                    |           |      3468 |
-Smokey dummy detector         |           |      1337 |
-Alive check                   |           |       292 |
-Get Codes                     |           |       190 |
-Get Libraries                 |           |       410 |
-Get view definition           |           |        66 |
-Mapped Codes                  |           |       129 |
-Query                         |           |       161 |
----------------------------------------------------------------
-     */
     commands.push(Box::new(SchemaTest {
         name: "Get Schema".to_string(),
         config: test_target.clone(),
