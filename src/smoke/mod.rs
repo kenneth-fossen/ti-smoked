@@ -1,9 +1,10 @@
 pub mod alive;
 mod codes;
-pub mod dummy;
-pub mod libraries;
-pub mod mapped_codes;
+mod dummy;
+mod libraries;
+mod mapped_codes;
 mod schema;
+mod views;
 
 use crate::commonlib::Client;
 use async_trait::async_trait;
@@ -165,6 +166,12 @@ pub struct CodesTest {
 }
 
 pub struct SchemaTest {
+    pub name: String,
+    pub config: TestTarget,
+    pub client: Client,
+}
+
+pub struct ViewsTest {
     pub name: String,
     pub config: TestTarget,
     pub client: Client,

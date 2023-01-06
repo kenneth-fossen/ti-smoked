@@ -3,9 +3,11 @@ pub mod entities;
 use crate::smoke::TestTarget;
 use async_trait::async_trait;
 use azure_core::auth::TokenCredential;
-use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
+use entities::{Code, Library, Message, SchemaOptions, ViewDefinition};
 use serde::de::DeserializeOwned;
 use std::sync::Arc;
+use serde::Serialize;
+use crate::commonlib::entities::Schema;
 
 pub struct ClientFactory {
     appkey: String,
@@ -40,9 +42,11 @@ pub trait Configure {
 #[async_trait]
 pub trait CommonLibClient {
     async fn do_request(&self, url: String) -> String;
-    async fn do_post_request(&self, url: String) -> String;
+    async fn do_post_request(&self, url: String, body: String) -> String;
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T;
-    //async fn post_request<T: DeserializeOwned, U:Serialize>(&self, url: String, body: U) -> T;
+    async fn post_request<T, U>(&self, url: String, body: U) -> T
+        where T: DeserializeOwned + Send, U:Serialize + Send;
+
 }
 
 #[async_trait]
@@ -88,7 +92,6 @@ impl Configure for ClientFactory {
 #[async_trait]
 impl CommonLibClient for Client {
     async fn do_request(&self, url: String) -> String {
-        // let time = Instant::now();
         self.webclient
             .get(url)
             .header("Authorization", format!("Bearer {}", self.token))
@@ -98,14 +101,14 @@ impl CommonLibClient for Client {
             .text()
             .await
             .unwrap()
-        // println!("Reqwest: {}ms", time.elapsed().as_millis());
     }
 
-    async fn do_post_request(&self, url: String) -> String {
+    async fn do_post_request(&self, url: String, body: String) -> String {
         self.webclient
-            .get(url)
+            .post(url)
             .header("Authorization", format!("Bearer {}", self.token))
-            .body("")
+            .header("Content-Type", "application/json")
+            .body(body)
             .send()
             .await
             .unwrap()
@@ -121,18 +124,17 @@ impl CommonLibClient for Client {
         item
     }
 
-    /*async fn post_request<T, U>(&self, url: String, body: U) -> T
-        where T: DeserializeOwned, U: Serialize + Send {
-        todo!();
-        /*let resp = if let Ok(json) = serde_json::to_string(&body) {
-            self.do_post_request(json.clone()).await
+    async fn post_request<T, U>(&self, url: String, body: U) -> T
+        where T: DeserializeOwned + Send, U: Serialize + Send {
+        let json = if let Ok(json) = serde_json::to_string(&body) {
+            json
         } else {
             "".to_string()
         };
-
+        let resp = self.do_post_request(url, json.clone()).await;
         let item: T = serde_json::from_str(resp.as_str()).unwrap();
-        item*/
-    }*/
+        item
+    }
 }
 
 #[derive(Debug)]
@@ -171,11 +173,10 @@ impl CommonLibraryApi for Client {
         self.get_request::<Vec<Code>>(url).await
     }
 
-    async fn get_schema(&self, _schema_options: SchemaOptions) -> Schema {
-        todo!();
-        /*let baseurl = &self.baseurl;
-        //let url = format!("{baseurl}/api/schema");
-        self.get_request::<Schema>(url).await*/
+    async fn get_schema(&self, schema_options: SchemaOptions) -> Schema {
+        let baseurl = &self.baseurl;
+        let url = format!("{baseurl}/api/Schema");
+        self.post_request::<Schema, SchemaOptions>(url, schema_options).await
     }
 
     async fn get_code_mapped(&self, library: String, schema: String, facility: String) -> Message {
@@ -185,8 +186,10 @@ impl CommonLibraryApi for Client {
         self.get_request::<Message>(url).await
     }
 
-    async fn get_genericview_definition(&self, _library: String) -> ViewDefinition {
-        todo!()
+    async fn get_genericview_definition(&self, library: String) -> ViewDefinition {
+        let baseurl = &self.baseurl;
+        let url = format!("{baseurl}//api/GenericViews/library/{library}/definition");
+        self.get_request::<ViewDefinition>(url).await
     }
 }
 
@@ -195,8 +198,13 @@ mod test {
     use super::*;
     use crate::open;
 
-    fn get_config() -> TestTarget {
-        let file_content = open("dev.json").expect("Failed to open the file");
+    fn get_config(config: Option<String>) -> TestTarget {
+        let filename = if config.is_some() {
+            config.unwrap()
+        } else {
+            "dev.json".to_string()
+        };
+        let file_content = open(&filename).expect("Failed to open the file");
         let test_target: TestTarget =
             serde_json::from_str(file_content.as_str()).expect("Failed to parse JSON");
         test_target
@@ -204,34 +212,33 @@ mod test {
 
     #[tokio::test]
     async fn authenticate() {
-        let test_target = get_config();
-        let client = ClientFactory::configure(test_target).build();
-        let token = client.azure_client.get_token(client.appkey.as_str()).await;
-        let token: String = token.unwrap().token.secret().chars().take(2).collect();
+        let test_target = get_config(None);
+        let client = ClientFactory::configure(test_target).build().await;
+        let token: String = client.token.chars().take(2).collect();
         assert_eq!(token, "ey")
     }
 
     #[tokio::test]
     async fn get_library() {
-        let test_target = get_config();
-        let client = ClientFactory::configure(test_target).build();
+        let test_target = get_config(None);
+        let client = ClientFactory::configure(test_target).build().await;
         let resp = client.get_library("Facility and Project".to_string()).await;
         assert_eq!(resp.len() > 0, true)
     }
 
     #[tokio::test]
     async fn get_code() {
-        let test_target = get_config();
+        let test_target = get_config(None);
 
-        let client = ClientFactory::configure(test_target).build();
+        let client = ClientFactory::configure(test_target).build().await;
         let resp = client.get_code("Facility".to_string()).await;
         assert_eq!(resp.len() > 0, true)
     }
 
     #[tokio::test]
     async fn get_mapped_code() {
-        let test_target = get_config();
-        let client = ClientFactory::configure(test_target).build();
+        let test_target = get_config(None);
+        let client = ClientFactory::configure(test_target).build().await;
         let resp = client
             .get_code_mapped(
                 "CableCode".to_string(),
@@ -244,12 +251,24 @@ mod test {
 
     #[tokio::test]
     async fn get_schema() {
-        let test_targets = get_config();
-        let client = ClientFactory::configure(test_targets).build();
+        let test_targets = get_config(Some("local.json".to_string()));
+        let client = ClientFactory::configure(test_targets)
+            .build()
+            .await;
 
         let schema_options = SchemaOptions {
-            schema_name: "TR3111".to_string(),
+            schema_name: "TR3111".to_string()
         };
-        let resp = client.get_schema(schema_options).await;
+        let _resp = client.get_schema(schema_options).await;
+    }
+
+    #[tokio::test]
+    async fn get_viewdefinition() {
+        let test_target = get_config(None);
+        let client = ClientFactory::configure(test_target)
+            .build()
+            .await;
+        let library_name = "Facility".to_string();
+        let _resp = client.get_genericview_definition(library_name).await;
     }
 }

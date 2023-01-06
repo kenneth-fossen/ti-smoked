@@ -1,33 +1,90 @@
 #![allow(dead_code)]
 use chrono::{DateTime, Utc};
-use serde::{Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, Serialize};
 use uuid::Uuid;
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Schema {
     pub name: String,
-    pub description: String,
+    pub references: Option<String>,
+    pub mapping: Option<String>,
+    pub versions: Vec<SchemaVersion>,
+    pub description: Option<String>,
     pub interfaces: Vec<SchemaInterface>,
     pub classes: Vec<SchemaClass>,
+}
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SchemaVersion {
+    version_number: String,
+    description: Option<String>,
+    #[serde(deserialize_with = "str_to_time")]
+    release_date: DateTime<Utc>,
+    change_log: Vec<String>,
+}
+
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SchemaClass {
+    name: String,
+    description: Option<String>,
+    schema: Option<String>,
+    comments: Option<String>,
+    references: Option<String>,
+
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct SchemaClass;
+pub struct SchemaInterface {
+    name: Option<String>,
+    description: Option<String>,
+    comments: Option<String>,
+    reference: Option<String>,
+}
 
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SchemaInterface;
-
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaOptions {
     pub(crate) schema_name: String,
 }
 
-#[derive(Deserialize)]
-pub struct ViewDefinition;
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct ViewDefinition {
+    library: String,
+    pub(crate) columns: Vec<DatabaseInformationSchemaColumn>
+}
+
+#[derive(Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub struct DatabaseInformationSchemaColumn {
+    table_catalog: Option<String>,
+    table_schema: Option<String>,
+    table_name: Option<String>,
+    pub column_name: Option<String>,
+    ordinal_position: Option<i32>,
+    is_nullable: Option<String>,
+    data_type: Option<String>,
+    character_maximum_length: Option<i32>,
+    character_octet_length: Option<i32>,
+    numeric_precision: Option<i32>,
+    numeric_precision_radix: Option<i32>,
+    numeric_scale: Option<i32>,
+    datetime_precision: Option<i32>,
+    character_set_catalog: Option<String>,
+    character_set_schema: Option<String>,
+    character_set_name: Option<String>,
+    collation_catalog: Option<String>,
+    collation_schema: Option<String>,
+    collation_name: Option<String>,
+    domain_catalog: Option<String>,
+    domain_schema: Option<String>,
+    domain_name: Option<String>,
+}
+
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]

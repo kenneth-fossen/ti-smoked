@@ -9,9 +9,7 @@
 use ti_smoked::commonlib::{ClientFactory, Configure};
 use ti_smoked::open;
 
-use ti_smoked::smoke::{
-    AliveTest, CodesTest, DummyTest, LibrariesTest, MappedCodeTest, SmokeTest, TestTarget,
-};
+use ti_smoked::smoke::{AliveTest, CodesTest, DummyTest, LibrariesTest, MappedCodeTest, SchemaTest, SmokeTest, TestTarget, ViewsTest};
 
 #[tokio::main]
 async fn main() {
@@ -26,21 +24,34 @@ async fn main() {
 
     let mut commands: Vec<Box<dyn SmokeTest>> = vec![];
     let azure_client = ClientFactory::configure(test_target.clone()).build().await;
+
+    /*
+    -----------------------------------------------------------------------------------------------
+Get schema                    |           |      3468 |
+Smokey dummy detector         |           |      1337 |
+Alive check                   |           |       292 |
+Get Codes                     |           |       190 |
+Get Libraries                 |           |       410 |
+Get view definition           |           |        66 |
+Mapped Codes                  |           |       129 |
+Query                         |           |       161 |
+---------------------------------------------------------------
+     */
+    commands.push(Box::new(SchemaTest {
+        name: "Get Schema".to_string(),
+        config: test_target.clone(),
+        client: azure_client.clone(),
+    }));
+    commands.push(Box::new(DummyTest {
+        name: "Dummy Test".to_string(),
+    }));
     commands.push(Box::new(AliveTest {
         name: "Alive Test".to_string(),
         config: test_target.clone(),
         client: http_client.clone(),
     }));
-    commands.push(Box::new(DummyTest {
-        name: "Dummy Test".to_string(),
-    }));
     commands.push(Box::new(CodesTest {
         name: "Codes Test".to_string(),
-        config: test_target.clone(),
-        client: azure_client.clone(),
-    }));
-    commands.push(Box::new(MappedCodeTest {
-        name: "MappedCode".to_string(),
         config: test_target.clone(),
         client: azure_client.clone(),
     }));
@@ -49,7 +60,17 @@ async fn main() {
         config: test_target.clone(),
         client: azure_client.clone(),
     }));
-
+    commands.push(Box::new(ViewsTest {
+        name: "Get View Def".to_string(),
+        config: test_target.clone(),
+        client: azure_client.clone(),
+    }));
+    commands.push(Box::new(MappedCodeTest {
+        name: "MappedCode".to_string(),
+        config: test_target.clone(),
+        client: azure_client.clone(),
+    }));
+    // query test
     println!("Test Target: {}\n", &test_target.name);
 
     run(commands, test_target).await;
