@@ -3,6 +3,18 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Deserializer, Serialize};
 use uuid::Uuid;
 
+fn str_to_time<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
+    where
+        D: Deserializer<'de>,
+{
+    let mut timestr = String::deserialize(d)?;
+    if !timestr.ends_with('Z') {
+        timestr.push('Z');
+    }
+    let date = DateTime::parse_from_rfc3339(&timestr).unwrap();
+    Ok(date.with_timezone(&Utc))
+}
+
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Schema {
@@ -24,7 +36,6 @@ pub struct SchemaVersion {
     change_log: Vec<String>,
 }
 
-
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct SchemaClass {
@@ -33,7 +44,6 @@ pub struct SchemaClass {
     schema: Option<String>,
     comments: Option<String>,
     references: Option<String>,
-
 }
 
 #[derive(Deserialize)]
@@ -251,15 +261,3 @@ pub struct ReferenceCode {
 #[derive(Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct AttributeValue;
-
-fn str_to_time<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let mut timestr = String::deserialize(d)?;
-    if !timestr.ends_with('Z') {
-        timestr.push('Z');
-    }
-    let date = DateTime::parse_from_rfc3339(&timestr).unwrap();
-    Ok(date.with_timezone(&Utc))
-}

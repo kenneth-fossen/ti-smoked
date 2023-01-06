@@ -27,7 +27,7 @@ impl SmokeTest for CodesTest {
             "Johan Sverdrup",
             "Description should be Johan Sverdrup"
         );
-        assert_eq!(jsv.is_valid, true, "JSV Should be valid");
+        assert!(jsv.is_valid, "JSV Should be valid");
         assert_eq!(jsv.date_created.year(), 2019, "JSV was created in 2019");
         assert!(
             jsv.date_updated.year() > jsv.date_created.year(),

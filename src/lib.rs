@@ -6,8 +6,8 @@ pub mod smoke;
 
 pub fn open(filename: &str) -> Result<String, std::io::Error> {
     let basepath = concat!(env!("CARGO_MANIFEST_DIR"), "/local");
-    println!("BasePath: {}", basepath);
-    let filepath = format!("{}/{}", basepath, filename);
+    println!("BasePath: {basepath}");
+    let filepath = format!("{basepath}/{filename}");
     println!("Opening file: {}", &filepath);
     let mut file = File::open(filepath).unwrap();
     let mut content = String::new();

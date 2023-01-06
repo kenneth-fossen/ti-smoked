@@ -19,7 +19,7 @@ impl SmokeTest for MappedCodeTest {
             )
             .await;
 
-        if res.objects.len() > 0 {
+        if !res.objects.is_empty(){
             return test_result.success();
         }
 

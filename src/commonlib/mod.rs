@@ -188,7 +188,7 @@ impl CommonLibraryApi for Client {
 
     async fn get_genericview_definition(&self, library: String) -> ViewDefinition {
         let baseurl = &self.baseurl;
-        let url = format!("{baseurl}//api/GenericViews/library/{library}/definition");
+        let url = format!("{baseurl}/api/GenericViews/library/{library}/definition");
         self.get_request::<ViewDefinition>(url).await
     }
 }

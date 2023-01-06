@@ -14,16 +14,15 @@ impl SmokeTest for LibrariesTest {
             .client
             .get_library("Facility and Project".to_string())
             .await;
-        assert_eq!(
+        assert!(
             res.iter().len() > 0,
-            true,
             "List of libraries should not be empty"
         );
 
         let facility: Vec<_> = res.iter().filter(|lib| lib.name.eq("Facility")).collect();
         assert_eq!(facility.len(), 1);
         let cablecode: Vec<_> = res.iter().filter(|lib| lib.name.eq("CableCode")).collect();
-        assert_eq!(cablecode.is_empty(), true);
+        assert!(cablecode.is_empty());
         test_result.success()
     }
 }

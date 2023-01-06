@@ -24,7 +24,7 @@ impl SmokeTest for ViewsTest {
             .collect();
 
 
-        assert_eq!(name_column.is_empty(), false, "Facility.Name column is missing");
+        assert!(!name_column.is_empty(), "Facility.Name column is missing");
         let tie: Vec<_>  = view_definition.columns
             .iter()
             .filter(|col| {
@@ -35,7 +35,7 @@ impl SmokeTest for ViewsTest {
                 }
             })
             .collect();
-        assert_eq!(tie.is_empty(), false, "Facility.IsForTIE column is missing");
+        assert!(!tie.is_empty(), "Facility.IsForTIE column is missing");
 
         test_result.success()
     }

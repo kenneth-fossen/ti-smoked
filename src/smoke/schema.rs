@@ -16,10 +16,10 @@ impl SmokeTest for SchemaTest {
         let schema = self.client.get_schema(schema_options).await;
         // let schema = schemadto..first().unwrap();
 
-        assert_eq!(!schema.name.is_empty(), true, "It has a name");
-        assert_eq!(schema.description.is_none(), false, "There shall be a description");
-        assert_eq!(schema.interfaces.len() >0, true);
-        assert_eq!(schema.classes.len() > 0, true);
+        assert!(!schema.name.is_empty(), "It has a name");
+        assert!(schema.description.is_some(), "There shall be a description");
+        assert!(!schema.interfaces.is_empty());
+        assert!(!schema.classes.is_empty());
 
         test_result.success()
     }
