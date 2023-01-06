@@ -6,6 +6,7 @@
 // unable to use Async fn in trait due to the use of Box<dyn Trait>
 #![allow(dead_code, unused_variables, unreachable_code)]
 
+use std::env;
 use ti_smoked::commonlib::{ClientFactory, Configure};
 use ti_smoked::open;
 
@@ -18,7 +19,15 @@ use ti_smoked::smoke::{
 async fn main() {
     println!("Hello, world!\n");
 
-    let file_content = open("prod.json").expect("Failed to open the file");
+    let args: Vec<String> = env::args().collect();
+
+    let env = if !args.is_empty() {
+        format!("{}.json",&args[1])
+    } else {
+        "local.json".to_string()
+    };
+
+    let file_content = open(&env).expect("Failed to open the file");
     let test_target: TestTarget =
         serde_json::from_str(file_content.as_str()).expect("Failed to parse JSON");
     println!();
