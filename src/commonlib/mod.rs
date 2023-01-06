@@ -6,7 +6,6 @@ use azure_core::auth::TokenCredential;
 use entities::{Code, Library, Message, Schema, SchemaOptions, ViewDefinition};
 use serde::de::DeserializeOwned;
 use std::sync::Arc;
-use tokio::time::Instant;
 
 pub struct ClientFactory {
     appkey: String,
