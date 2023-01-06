@@ -1,13 +1,13 @@
 pub mod entities;
 
+use crate::commonlib::entities::Schema;
 use crate::smoke::TestTarget;
 use async_trait::async_trait;
 use azure_core::auth::TokenCredential;
 use entities::{Code, Library, Message, SchemaOptions, ViewDefinition};
 use serde::de::DeserializeOwned;
-use std::sync::Arc;
 use serde::Serialize;
-use crate::commonlib::entities::Schema;
+use std::sync::Arc;
 
 pub struct ClientFactory {
     appkey: String,
@@ -45,8 +45,9 @@ pub trait CommonLibClient {
     async fn do_post_request(&self, url: String, body: String) -> String;
     async fn get_request<T: DeserializeOwned>(&self, url: String) -> T;
     async fn post_request<T, U>(&self, url: String, body: U) -> T
-        where T: DeserializeOwned + Send, U:Serialize + Send;
-
+    where
+        T: DeserializeOwned + Send,
+        U: Serialize + Send;
 }
 
 #[async_trait]
@@ -125,7 +126,10 @@ impl CommonLibClient for Client {
     }
 
     async fn post_request<T, U>(&self, url: String, body: U) -> T
-        where T: DeserializeOwned + Send, U: Serialize + Send {
+    where
+        T: DeserializeOwned + Send,
+        U: Serialize + Send,
+    {
         let json = if let Ok(json) = serde_json::to_string(&body) {
             json
         } else {
@@ -176,7 +180,8 @@ impl CommonLibraryApi for Client {
     async fn get_schema(&self, schema_options: SchemaOptions) -> Schema {
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/Schema");
-        self.post_request::<Schema, SchemaOptions>(url, schema_options).await
+        self.post_request::<Schema, SchemaOptions>(url, schema_options)
+            .await
     }
 
     async fn get_code_mapped(&self, library: String, schema: String, facility: String) -> Message {
@@ -252,12 +257,10 @@ mod test {
     #[tokio::test]
     async fn get_schema() {
         let test_targets = get_config(Some("local.json".to_string()));
-        let client = ClientFactory::configure(test_targets)
-            .build()
-            .await;
+        let client = ClientFactory::configure(test_targets).build().await;
 
         let schema_options = SchemaOptions {
-            schema_name: "TR3111".to_string()
+            schema_name: "TR3111".to_string(),
         };
         let _resp = client.get_schema(schema_options).await;
     }
@@ -265,9 +268,7 @@ mod test {
     #[tokio::test]
     async fn get_viewdefinition() {
         let test_target = get_config(None);
-        let client = ClientFactory::configure(test_target)
-            .build()
-            .await;
+        let client = ClientFactory::configure(test_target).build().await;
         let library_name = "Facility".to_string();
         let _resp = client.get_genericview_definition(library_name).await;
     }

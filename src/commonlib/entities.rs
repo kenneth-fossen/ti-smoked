@@ -4,8 +4,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use uuid::Uuid;
 
 fn str_to_time<'de, D>(d: D) -> Result<DateTime<Utc>, D::Error>
-    where
-        D: Deserializer<'de>,
+where
+    D: Deserializer<'de>,
 {
     let mut timestr = String::deserialize(d)?;
     if !timestr.ends_with('Z') {
@@ -65,7 +65,7 @@ pub struct SchemaOptions {
 #[serde(rename_all = "camelCase")]
 pub struct ViewDefinition {
     library: String,
-    pub(crate) columns: Vec<DatabaseInformationSchemaColumn>
+    pub(crate) columns: Vec<DatabaseInformationSchemaColumn>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -94,7 +94,6 @@ pub struct DatabaseInformationSchemaColumn {
     domain_schema: Option<String>,
     domain_name: Option<String>,
 }
-
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
