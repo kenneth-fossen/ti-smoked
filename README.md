@@ -5,7 +5,14 @@
 [![Rewrite it in Rust (RIIR)](img/riir.jpg)](https://www.redbubble.com/i/poster/Rewrite-It-In-Rust-Rust-Programming-by-tribaltattoo/130040421.LVTDI)
 
 It is supposed to be so much better.
-Anyway, a small play attempt to rewrite a Smoketesting tool that we use at work.
+Anyway, a small play attempt to rewrite a Smoke Testing tool that we use at work.
+I learned a lot by doing this silly project and it was fun :)
+Happy coding
+
+Kenneth
+
+Notes:
+The poster is not mine, but you can buy it from the link provided.
 
 ## How to run
 
@@ -45,10 +52,15 @@ Test Target: Common Library PROD
 | MappedCode     |               | 943 ms       |               |
 ----------------------------------------------------------
 ```
+## Performance
 
-
-I learned a lot by doing this silly project and it was fun :)
-Happy coding
+I tried to stay true to the design of the other application. 
+This came with some bottlenecks in Rust, and I, especially made some changes to the token fetching procedure to make it faster.
+Creating new instances of `ClientSecretCredentials` was expensive and slow, and was changed to just store the token needed to do the requests.
+This has some implications, e.g. if the tests will have a combined runtime of over 1 hour this approach will fail.
+The token is only valid for that timespan.
+Other than that the application performs similar if not better.
+Also, the data structures where very large and complex, so we do skip deserializing some fields, if not entire datastructures. 
 
 ## This vs Original project
 PS: Im missing one test from the original project.
@@ -81,8 +93,3 @@ YAML                    1           30           20            5            5
 Total                  32         1228         1052           12          164
 ===============================================================================
 ```
-
-Kenneth
-
-Notes:
-The poster is not mine, but you can buy it from the link provided.
