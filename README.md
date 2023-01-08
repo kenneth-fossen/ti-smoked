@@ -93,3 +93,11 @@ YAML                    1           30           20            5            5
 Total                  32         1228         1052           12          164
 ===============================================================================
 ```
+
+### FlameGraph
+
+The flamegraph shows that the most time is used on Authentication.
+In the first edition of this, we ran authentication for each test and that was really slow.
+This was corrected and we have a much better performance.
+
+![Flamegraph](ti-smoked.svg)
