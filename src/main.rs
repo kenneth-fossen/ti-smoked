@@ -1,11 +1,3 @@
-//#![feature(async_closure)]
-//#![feature(async_iterator)]
-
-//#![feature(async_fn_in_trait)]
-//#![allow(incomplete_features)]
-// unable to use Async fn in trait due to the use of Box<dyn Trait>
-#![allow(dead_code, unused_variables, unreachable_code)]
-
 use std::env;
 use ti_smoked::commonlib::{ClientFactory, Configure};
 use ti_smoked::open;
@@ -22,7 +14,7 @@ async fn main() {
     let args: Vec<String> = env::args().collect();
 
     let env = if !args.is_empty() {
-        format!("{}.json",&args[1])
+        format!("{}.json", &args[1])
     } else {
         "local.json".to_string()
     };

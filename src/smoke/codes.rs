@@ -57,22 +57,3 @@ impl SmokeTest for CodesTest {
         test_result.success()
     }
 }
-
-/*
-           Assert.True(facilities.Count > 0, "List of facilities should not be empty");
-
-               var jsv = facilities.SingleOrDefault(x => x.Name == "JSV");
-               Assert.NotNull(jsv, "JSV should be in the list of facilities");
-
-               Assert.Equal(jsv.Identity, "JSV");
-               Assert.Equal(jsv.Description, "Johan Sverdrup");
-               Assert.True(jsv.IsValid, "JSV should be valid");
-               Assert.True(jsv.DateCreated.Value.Year == 2019, "Expected JSV to have been created in 2019");
-               Assert.True(jsv.DateUpdated.Value > jsv.DateCreated.Value, "Expected DateUpdated to be after DateCreated");
-
-               var attributes = jsv.Attributes;
-               Assert.True(attributes.SingleOrDefault(x => x.DefinitionName == "SAPPlant")?.DisplayValue == "See subinstallations", "JSV.SAPPlant error");
-               Assert.True(attributes.SingleOrDefault(x => x.DefinitionName == "IsForTIE")?.DisplayValue == "True", "JSV.IsForTIE error");
-
-           }
-*/

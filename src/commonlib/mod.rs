@@ -165,13 +165,11 @@ impl TokenProvider {
 #[async_trait]
 impl CommonLibraryApi for Client {
     async fn get_library(&self, group: String) -> Vec<Library> {
-        // /api/Library?name={name}&group={group}&scope={scope}&name={name}&isValid={isValid}"
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/Library?group={group}");
         self.get_request::<Vec<Library>>(url).await
     }
     async fn get_code(&self, library: String) -> Vec<Code> {
-        // "/api/Code/{library}?scope={scope}&name={name}&description={description}&isValid={isValid}&$filter={filter}");
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/Code/{library}");
         self.get_request::<Vec<Code>>(url).await
@@ -185,7 +183,6 @@ impl CommonLibraryApi for Client {
     }
 
     async fn get_code_mapped(&self, library: String, schema: String, facility: String) -> Message {
-        // $"/api/Code/Mapped/{library}?schema={schema}&scope={scope}");
         let baseurl = &self.baseurl;
         let url = format!("{baseurl}/api/code/Mapped/{library}?schema={schema}&scope={facility}");
         self.get_request::<Message>(url).await
